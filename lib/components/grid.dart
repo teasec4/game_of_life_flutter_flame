@@ -16,9 +16,9 @@ class Grid extends PositionComponent with TapCallbacks {
   String? patternToPlace; // Какой паттерн сейчас ставить
 
   Grid({
-    this.cellSize = gridCellSize,
-    this.cols = gridCols,
-    this.rows = gridRows,
+    required this.cellSize,
+    required this.cols,
+    required this.rows,
   })
       : super(
           size: Vector2(cellSize * cols, cellSize * rows),
@@ -125,7 +125,7 @@ class Grid extends PositionComponent with TapCallbacks {
             addGlider(col, row);
             break;
         }
-        patternToPlace = null;
+        // Остаемся в режиме расставления, не сбрасываем patternToPlace
       } else {
         // Просто переключаем клетку
         toggleCell(event.localPosition);

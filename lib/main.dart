@@ -12,7 +12,7 @@ void main() {
 }
 
 class ConfigSelectionPage extends StatelessWidget {
-  const ConfigSelectionPage();
+  const ConfigSelectionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +21,7 @@ class ConfigSelectionPage extends StatelessWidget {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          // gridConfigs form constant
           children: gridConfigs.map((config) {
             return Padding(
               padding: const EdgeInsets.all(16),
@@ -49,7 +50,7 @@ class ConfigSelectionPage extends StatelessWidget {
 class GamePage extends StatefulWidget {
   final MyGame game;
 
-  const GamePage({required this.game});
+  const GamePage({super.key, required this.game});
 
   @override
   State<GamePage> createState() => _GamePageState();
@@ -61,6 +62,19 @@ class _GamePageState extends State<GamePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Game Of Life'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: (){
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => const ConfigSelectionPage(),
+              ),
+            );
+          },
+        ),
+      ),
       body: Stack(
         children: [
           GameWidget(game: widget.game),
@@ -103,6 +117,11 @@ class _GamePageState extends State<GamePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: selectedPattern == 'Block'
+                            ? Colors.blue
+                            : Colors.blueAccent,
+                      ),
                       onPressed: selectedPattern == null
                           ? () {
                               widget.game.gameWorld
@@ -115,6 +134,11 @@ class _GamePageState extends State<GamePage> {
                       child: const Text('Block'),
                     ),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: selectedPattern == 'Blinker'
+                            ? Colors.blue
+                            : Colors.blueAccent,
+                      ),
                       onPressed: selectedPattern == null
                           ? () {
                               widget.game.gameWorld
@@ -127,6 +151,11 @@ class _GamePageState extends State<GamePage> {
                       child: const Text('Blinker'),
                     ),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: selectedPattern == 'Glider'
+                            ? Colors.blue
+                            : Colors.blueAccent,
+                      ),
                       onPressed: selectedPattern == null
                           ? () {
                               widget.game.gameWorld
@@ -160,6 +189,7 @@ class _GamePageState extends State<GamePage> {
                       },
                       child: const Text('Start'),
                     ),
+                    
                   ],
                 ),
               ],
