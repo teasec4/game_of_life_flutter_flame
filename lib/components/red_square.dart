@@ -1,40 +1,50 @@
-import 'package:flame/components.dart';
-import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
-import 'grid.dart';
 
-class RedSquare extends PositionComponent with DragCallbacks {
-  static const squareSize = 50.0;
+/// Представляет одну клетку в Grid
+class Cell {
+  int col;
+  int row;
+  bool alive;
 
-  final Grid grid;
+  Cell({
+    required this.col,
+    required this.row,
+    required this.alive,
+  });
 
-  RedSquare({
-    required Vector2 position,
-    required this.grid,
-  })
-      : super(
-          position: position,
-          size: Vector2(squareSize, squareSize),
-          anchor: Anchor.center,
-        );
+  /// Возвращает живых соседей
+  int countLiveNeighbors(List<List<Cell>> grid) {
+    int count = 0;
+    final rows = grid.length;
+    final cols = grid[0].length;
 
-  @override
-  void render(Canvas canvas) {
-    canvas.drawRect(
-      size.toRect(),
-      Paint()..color = Colors.red,
-    );
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue;
+
+        int newRow = row + dr;
+        int newCol = col + dc;
+
+        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+          if (grid[newRow][newCol].alive) {
+            count++;
+          }
+        }
+      }
+    }
+    return count;
   }
 
-  @override
-  void onDragUpdate(DragUpdateEvent event) {
-    position += event.localDelta;
-  }
+  /// Применяет правила Game of Life
+  bool getNextState(List<List<Cell>> grid) {
+    final liveNeighbors = countLiveNeighbors(grid);
 
-  @override
-  void onDragEnd(DragEndEvent event) {
-    super.onDragEnd(event);
-    // Притягиваем к ближайшей клетке сетки
-    position = grid.snapToGrid(position);
+    if (alive) {
+      // Живая клетка выживает при 2 или 3 соседях
+      return liveNeighbors == 2 || liveNeighbors == 3;
+    } else {
+      // Мертвая клетка оживает при ровно 3 соседях
+      return liveNeighbors == 3;
+    }
   }
 }
