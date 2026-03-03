@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
 
-/// Представляет одну клетку в Grid
+/// Представляет одну клетку в Grid (иммутабельная)
 class Cell {
-  int col;
-  int row;
-  bool alive;
+  final int col;
+  final int row;
 
-  Cell({
+  const Cell({
     required this.col,
     required this.row,
-    required this.alive,
   });
 
   /// Возвращает живых соседей
-  int countLiveNeighbors(List<List<Cell>> grid) {
+  static int countLiveNeighbors(int row, int col, List<List<bool>> alive) {
     int count = 0;
-    final rows = grid.length;
-    final cols = grid[0].length;
+    final rows = alive.length;
+    final cols = alive[0].length;
 
     for (int dr = -1; dr <= 1; dr++) {
       for (int dc = -1; dc <= 1; dc++) {
@@ -26,7 +24,7 @@ class Cell {
         int newCol = col + dc;
 
         if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-          if (grid[newRow][newCol].alive) {
+          if (alive[newRow][newCol]) {
             count++;
           }
         }
@@ -36,10 +34,10 @@ class Cell {
   }
 
   /// Применяет правила Game of Life
-  bool getNextState(List<List<Cell>> grid) {
-    final liveNeighbors = countLiveNeighbors(grid);
+  static bool getNextState(int row, int col, bool currentAlive, List<List<bool>> alive) {
+    final liveNeighbors = countLiveNeighbors(row, col, alive);
 
-    if (alive) {
+    if (currentAlive) {
       // Живая клетка выживает при 2 или 3 соседях
       return liveNeighbors == 2 || liveNeighbors == 3;
     } else {

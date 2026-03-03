@@ -1,17 +1,19 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
-import '../config/constants.dart';
 import 'red_square.dart';
 
 class Grid extends PositionComponent with TapCallbacks {
   final double cellSize;
   final int cols;
   final int rows;
+  double updateInterval; // Интервал обновления в секундах
 
+  // Храним состояние клеток отдельно для оптимизации памяти
   late List<List<Cell>> cells;
+  late List<List<bool>> alive;
+  
   double elapsedTime = 0;
-  static const updateInterval = 0.3; // Обновляем каждые 0.3 секунды
   bool isRunning = false; // Игра запущена?
   String? patternToPlace; // Какой паттерн сейчас ставить
 
@@ -19,6 +21,7 @@ class Grid extends PositionComponent with TapCallbacks {
     required this.cellSize,
     required this.cols,
     required this.rows,
+    this.updateInterval = 0.3,
   })
       : super(
           size: Vector2(cellSize * cols, cellSize * rows),
@@ -29,15 +32,18 @@ class Grid extends PositionComponent with TapCallbacks {
   }
 
   void _initializeCells() {
+    // Создаём иммутабельные Cell объекты один раз
     cells = List.generate(
       rows,
       (row) => List.generate(
         cols,
-        (col) {
-          // Изначально все клетки мертвы
-          return Cell(col: col, row: row, alive: false);
-        },
+        (col) => Cell(col: col, row: row),
       ),
+    );
+    // Инициализируем состояние (все клетки изначально мертвы)
+    alive = List.generate(
+      rows,
+      (row) => List.generate(cols, (col) => false),
     );
     isRunning = false;
   }
@@ -47,12 +53,22 @@ class Grid extends PositionComponent with TapCallbacks {
     elapsedTime = 0;
   }
 
-  void toggleCell(Vector2 position) {
-    final col = (position.x / cellSize).floor();
-    final row = (position.y / cellSize).floor();
+  /// Конвертирует локальную позицию в координаты ячейки (col, row)
+  /// Возвращает null если позиция за границами сетки
+  ({int col, int row})? toCellPosition(Vector2 localPosition) {
+    final col = (localPosition.x / cellSize).floor();
+    final row = (localPosition.y / cellSize).floor();
 
     if (row >= 0 && row < rows && col >= 0 && col < cols) {
-      cells[row][col].alive = !cells[row][col].alive;
+      return (col: col, row: row);
+    }
+    return null;
+  }
+
+  void toggleCell(Vector2 position) {
+    final cell = toCellPosition(position);
+    if (cell != null) {
+      alive[cell.row][cell.col] = !alive[cell.row][cell.col];
     }
   }
 
@@ -63,73 +79,133 @@ class Grid extends PositionComponent with TapCallbacks {
   void addGlider(int startCol, int startRow) {
     // Классический паттерн Glider
     if (startRow + 2 < rows && startCol + 2 < cols) {
-      cells[startRow][startCol + 1].alive = true;
-      cells[startRow + 1][startCol + 2].alive = true;
-      cells[startRow + 2][startCol].alive = true;
-      cells[startRow + 2][startCol + 1].alive = true;
-      cells[startRow + 2][startCol + 2].alive = true;
+      alive[startRow][startCol + 1] = true;
+      alive[startRow + 1][startCol + 2] = true;
+      alive[startRow + 2][startCol] = true;
+      alive[startRow + 2][startCol + 1] = true;
+      alive[startRow + 2][startCol + 2] = true;
     }
   }
 
   void addBlinker(int startCol, int startRow) {
     // Горизонтальный Blinker (3 в ряд)
     if (startCol + 2 < cols) {
-      cells[startRow][startCol].alive = true;
-      cells[startRow][startCol + 1].alive = true;
-      cells[startRow][startCol + 2].alive = true;
+      alive[startRow][startCol] = true;
+      alive[startRow][startCol + 1] = true;
+      alive[startRow][startCol + 2] = true;
     }
   }
 
   void addBlock(int startCol, int startRow) {
     // Стабильный паттерн Block (квадрат 2x2)
     if (startRow + 1 < rows && startCol + 1 < cols) {
-      cells[startRow][startCol].alive = true;
-      cells[startRow][startCol + 1].alive = true;
-      cells[startRow + 1][startCol].alive = true;
-      cells[startRow + 1][startCol + 1].alive = true;
+      alive[startRow][startCol] = true;
+      alive[startRow][startCol + 1] = true;
+      alive[startRow + 1][startCol] = true;
+      alive[startRow + 1][startCol + 1] = true;
+    }
+  }
+
+  void addToad(int startCol, int startRow) {
+    // Осцилятор периода 2
+    if (startRow + 1 < rows && startCol + 3 < cols) {
+      alive[startRow][startCol + 1] = true;
+      alive[startRow][startCol + 2] = true;
+      alive[startRow][startCol + 3] = true;
+      alive[startRow + 1][startCol] = true;
+      alive[startRow + 1][startCol + 1] = true;
+      alive[startRow + 1][startCol + 2] = true;
+    }
+  }
+
+  void addBeacon(int startCol, int startRow) {
+    // Осцилятор периода 2 (два квадрата 2x2 по диагонали)
+    if (startRow + 3 < rows && startCol + 3 < cols) {
+      alive[startRow][startCol] = true;
+      alive[startRow][startCol + 1] = true;
+      alive[startRow + 1][startCol] = true;
+      alive[startRow + 1][startCol + 1] = true;
+      alive[startRow + 2][startCol + 2] = true;
+      alive[startRow + 2][startCol + 3] = true;
+      alive[startRow + 3][startCol + 2] = true;
+      alive[startRow + 3][startCol + 3] = true;
+    }
+  }
+
+  void addBeehive(int startCol, int startRow) {
+    // Стабильный паттерн (похож на улей)
+    if (startRow + 2 < rows && startCol + 3 < cols) {
+      alive[startRow][startCol + 1] = true;
+      alive[startRow][startCol + 2] = true;
+      alive[startRow + 1][startCol] = true;
+      alive[startRow + 1][startCol + 3] = true;
+      alive[startRow + 2][startCol + 1] = true;
+      alive[startRow + 2][startCol + 2] = true;
+    }
+  }
+
+  void addPentomino(int startCol, int startRow) {
+    // R-пентомино (нестабильный, интересный для наблюдения)
+    if (startRow + 2 < rows && startCol + 2 < cols) {
+      alive[startRow][startCol + 1] = true;
+      alive[startRow][startCol + 2] = true;
+      alive[startRow + 1][startCol] = true;
+      alive[startRow + 1][startCol + 1] = true;
+      alive[startRow + 2][startCol + 1] = true;
     }
   }
 
   void _updateGeneration() {
-    // Вычисляем следующее поколение
-    final newCells = List.generate(
+    // Вычисляем следующее поколение, обновляя существующую матрицу
+    final newAlive = List.generate(
       rows,
       (row) => List.generate(
         cols,
-        (col) {
-          final cell = cells[row][col];
-          final nextAlive = cell.getNextState(cells);
-          return Cell(col: col, row: row, alive: nextAlive);
-        },
+        (col) => Cell.getNextState(row, col, alive[row][col], alive),
       ),
     );
-    cells = newCells;
+    // Заменяем состояние только один раз вместо копирования всех Cell объектов
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; col++) {
+        alive[row][col] = newAlive[row][col];
+      }
+    }
   }
 
   @override
   void onTapUp(TapUpEvent event) {
-    final col = (event.localPosition.x / cellSize).floor();
-    final row = (event.localPosition.y / cellSize).floor();
+    final cell = toCellPosition(event.localPosition);
+    if (cell == null) return;
 
-    if (row >= 0 && row < rows && col >= 0 && col < cols) {
-      if (patternToPlace != null) {
-        // Ставим паттерн в выбранное место
-        switch (patternToPlace) {
-          case 'block':
-            addBlock(col, row);
-            break;
-          case 'blinker':
-            addBlinker(col, row);
-            break;
-          case 'glider':
-            addGlider(col, row);
-            break;
-        }
-        // Остаемся в режиме расставления, не сбрасываем patternToPlace
-      } else {
-        // Просто переключаем клетку
-        toggleCell(event.localPosition);
+    if (patternToPlace != null) {
+      // Ставим паттерн в выбранное место
+      switch (patternToPlace) {
+        case 'block':
+          addBlock(cell.col, cell.row);
+          break;
+        case 'blinker':
+          addBlinker(cell.col, cell.row);
+          break;
+        case 'glider':
+          addGlider(cell.col, cell.row);
+          break;
+        case 'toad':
+          addToad(cell.col, cell.row);
+          break;
+        case 'beacon':
+          addBeacon(cell.col, cell.row);
+          break;
+        case 'beehive':
+          addBeehive(cell.col, cell.row);
+          break;
+        case 'pentomino':
+          addPentomino(cell.col, cell.row);
+          break;
       }
+      // Остаемся в режиме расставления, не сбрасываем patternToPlace
+    } else {
+      // Просто переключаем клетку
+      toggleCell(event.localPosition);
     }
   }
 
@@ -158,12 +234,12 @@ class Grid extends PositionComponent with TapCallbacks {
     // Рисуем клетки
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
-        final cell = cells[row][col];
+        final isAlive = alive[row][col];
         final x = col * cellSize;
         final y = row * cellSize;
 
         final paint = Paint()
-          ..color = cell.alive ? Colors.green : Colors.grey[800]!;
+          ..color = isAlive ? Colors.green : Colors.grey[800]!;
 
         canvas.drawRect(
           Rect.fromLTWH(x, y, cellSize, cellSize),

@@ -2,6 +2,8 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'my_game.dart';
 import 'config/constants.dart';
+import 'widgets/game_control_bar.dart';
+import 'widgets/pattern_menu_item.dart';
 
 void main() {
   runApp(
@@ -57,16 +59,40 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
-  String? selectedPattern;
+  String? _selectedPatternDisplay;
+
+  void _selectPatternFromMenu(String pattern) {
+    widget.game.setPatternToPlace(pattern);
+    setState(() {
+      _selectedPatternDisplay = pattern == 'block'
+          ? 'Block'
+          : pattern == 'blinker'
+              ? 'Blinker'
+              : 'Glider';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Select location for $_selectedPatternDisplay'),
+        duration: const Duration(milliseconds: 800),
+      ),
+    );
+  }
+
+  void _cancelPattern() {
+    widget.game.cancelPatternPlacement();
+    setState(() {
+      _selectedPatternDisplay = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Game Of Life'),
+        title: const Text('Game Of Life'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: (){
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (_) => const ConfigSelectionPage(),
@@ -74,6 +100,64 @@ class _GamePageState extends State<GamePage> {
             );
           },
         ),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: _selectPatternFromMenu,
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'block',
+                child: PatternMenuItem(
+                  name: 'Block',
+                  pattern: patternVisualizations['block']!,
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'blinker',
+                child: PatternMenuItem(
+                  name: 'Blinker',
+                  pattern: patternVisualizations['blinker']!,
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'glider',
+                child: PatternMenuItem(
+                  name: 'Glider',
+                  pattern: patternVisualizations['glider']!,
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'toad',
+                child: PatternMenuItem(
+                  name: 'Toad',
+                  pattern: patternVisualizations['toad']!,
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'beacon',
+                child: PatternMenuItem(
+                  name: 'Beacon',
+                  pattern: patternVisualizations['beacon']!,
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'beehive',
+                child: PatternMenuItem(
+                  name: 'Beehive',
+                  pattern: patternVisualizations['beehive']!,
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'pentomino',
+                child: PatternMenuItem(
+                  name: 'R-Pentomino',
+                  pattern: patternVisualizations['pentomino']!,
+                ),
+              ),
+            ],
+            tooltip: 'Add Pattern',
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -82,117 +166,18 @@ class _GamePageState extends State<GamePage> {
             bottom: 20,
             left: 20,
             right: 20,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (selectedPattern != null)
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.amber,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Выбери место для $selectedPattern',
-                            style: const TextStyle(color: Colors.black87),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            widget.game.gameWorld.cancelPatternPlacement();
-                            setState(() {
-                              selectedPattern = null;
-                            });
-                          },
-                          child: const Text('Отмена'),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: selectedPattern == 'Block'
-                            ? Colors.blue
-                            : Colors.blueAccent,
-                      ),
-                      onPressed: selectedPattern == null
-                          ? () {
-                              widget.game.gameWorld
-                                  .setPatternToPlace('block');
-                              setState(() {
-                                selectedPattern = 'Block';
-                              });
-                            }
-                          : null,
-                      child: const Text('Block'),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: selectedPattern == 'Blinker'
-                            ? Colors.blue
-                            : Colors.blueAccent,
-                      ),
-                      onPressed: selectedPattern == null
-                          ? () {
-                              widget.game.gameWorld
-                                  .setPatternToPlace('blinker');
-                              setState(() {
-                                selectedPattern = 'Blinker';
-                              });
-                            }
-                          : null,
-                      child: const Text('Blinker'),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: selectedPattern == 'Glider'
-                            ? Colors.blue
-                            : Colors.blueAccent,
-                      ),
-                      onPressed: selectedPattern == null
-                          ? () {
-                              widget.game.gameWorld
-                                  .setPatternToPlace('glider');
-                              setState(() {
-                                selectedPattern = 'Glider';
-                              });
-                            }
-                          : null,
-                      child: const Text('Glider'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        widget.game.gameWorld.resetGame();
-                        setState(() {
-                          selectedPattern = null;
-                        });
-                      },
-                      child: const Text('Reset'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        widget.game.gameWorld.startGame();
-                        setState(() {});
-                      },
-                      child: const Text('Start'),
-                    ),
-                    
-                  ],
-                ),
-              ],
+            child: GameControlBar(
+              onResetGame: () {
+                widget.game.resetGame();
+                setState(() {
+                  _selectedPatternDisplay = null;
+                });
+              },
+              onStartGame: () => widget.game.startGame(),
+              onSpeedChanged: (speed) => widget.game.setUpdateInterval(speed),
+              initialSpeed: widget.game.updateInterval,
+              selectedPattern: _selectedPatternDisplay,
+              onPatternCanceled: _cancelPattern,
             ),
           ),
         ],
