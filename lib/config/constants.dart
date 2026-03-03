@@ -36,4 +36,16 @@ const List<GridConfig> gridConfigs = [
     cols: 20,
     rows: 36,
   ),
+  GridConfig(
+    name: 'Huge',
+    cellSize: 10.0,
+    cols: 100,
+    rows: 150,
+  ),
+  GridConfig(
+    name: 'Infinite',
+    cellSize: 8.0,
+    cols: 200,
+    rows: 300,
+  ),
 ];

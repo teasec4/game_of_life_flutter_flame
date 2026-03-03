@@ -7,6 +7,9 @@ class GameControlBar extends StatefulWidget {
   final double initialSpeed;
   final String? selectedPattern;
   final VoidCallback onPatternCanceled;
+  final VoidCallback onResetView;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
 
   const GameControlBar({
     super.key,
@@ -16,6 +19,9 @@ class GameControlBar extends StatefulWidget {
     this.initialSpeed = 0.3,
     this.selectedPattern,
     required this.onPatternCanceled,
+    required this.onResetView,
+    required this.onZoomIn,
+    required this.onZoomOut,
   });
 
   @override
@@ -115,16 +121,36 @@ class _GameControlBarState extends State<GameControlBar>
                     Expanded(
                       child: Row(
                         children: [
-                          ElevatedButton.icon(
+                          IconButton(
                             onPressed: widget.onResetGame,
                             icon: const Icon(Icons.restart_alt),
-                            label: const Text('Reset'),
+                            tooltip: 'Reset Game',
+                            color: Colors.white,
                           ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
+                          IconButton(
                             onPressed: widget.onStartGame,
                             icon: const Icon(Icons.play_arrow),
-                            label: const Text('Start'),
+                            tooltip: 'Start Game',
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            onPressed: widget.onZoomOut,
+                            icon: const Icon(Icons.zoom_out),
+                            tooltip: 'Zoom Out',
+                            color: Colors.white,
+                          ),
+                          IconButton(
+                            onPressed: widget.onZoomIn,
+                            icon: const Icon(Icons.zoom_in),
+                            tooltip: 'Zoom In',
+                            color: Colors.white,
+                          ),
+                          IconButton(
+                            onPressed: widget.onResetView,
+                            icon: const Icon(Icons.fit_screen),
+                            tooltip: 'Reset View',
+                            color: Colors.white,
                           ),
                         ],
                       ),

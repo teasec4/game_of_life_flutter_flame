@@ -1,6 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flame/camera.dart';
-import 'package:flame/widgets.dart';
+import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'config/constants.dart';
 import 'components/grid.dart';
@@ -9,6 +9,11 @@ class MyGame extends FlameGame {
   late Grid grid;
   late GridConfig currentConfig;
   double updateInterval = 0.3; // Скорость обновления в секундах
+  
+  // Параметры zoom и pan
+  static const double minZoom = 0.5;
+  static const double maxZoom = 5.0;
+  late World gameWorld;
 
   MyGame({GridConfig? config})
       : currentConfig = config ?? gridConfigs[2],
@@ -24,18 +29,17 @@ class MyGame extends FlameGame {
       rows: currentConfig.rows,
       updateInterval: updateInterval,
     );
-    add(grid);
     
-    camera = CameraComponent.withFixedResolution(
-      width: gameWidth,
-      height: gameHeight,
-    );
+    // Создаём World для камеры
+    gameWorld = World();
+    gameWorld.add(grid);
     
-    // Устанавливаем viewfinder на (0, 0)
-    camera.viewfinder.position = Vector2.zero();
-    camera.viewfinder.anchor = Anchor.topLeft;
-    
-    addAll([camera]);
+    addAll([
+      gameWorld,
+      CameraComponent(world: gameWorld)
+        ..viewfinder.position = Vector2.zero()
+        ..viewfinder.anchor = Anchor.topLeft,
+    ]);
   }
 
   void recreateGridWithConfig(GridConfig config) {
@@ -66,6 +70,24 @@ class MyGame extends FlameGame {
   void addPentomino(int col, int row) => grid.addPentomino(col, row);
   void setPatternToPlace(String pattern) => grid.setPatternToPlace(pattern);
   void cancelPatternPlacement() => grid.cancelPatternPlacement();
+
+  /// Увеличить масштаб
+  void zoomIn() {
+    final newZoom = (camera.viewfinder.zoom * 1.2).clamp(minZoom, maxZoom);
+    camera.viewfinder.zoom = newZoom;
+  }
+
+  /// Уменьшить масштаб
+  void zoomOut() {
+    final newZoom = (camera.viewfinder.zoom * 0.8).clamp(minZoom, maxZoom);
+    camera.viewfinder.zoom = newZoom;
+  }
+
+  /// Центрирование камеры на сетку
+  void resetCameraView() {
+    camera.viewfinder.zoom = 1.0;
+    camera.viewfinder.position = Vector2.zero();
+  }
 
   @override
   Color backgroundColor() => Colors.grey;
