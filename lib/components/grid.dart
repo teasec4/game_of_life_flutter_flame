@@ -165,11 +165,7 @@ class Grid extends PositionComponent with TapCallbacks {
       ),
     );
     // Заменяем состояние только один раз вместо копирования всех Cell объектов
-    for (int row = 0; row < rows; row++) {
-      for (int col = 0; col < cols; col++) {
-        alive[row][col] = newAlive[row][col];
-      }
-    }
+    alive = newAlive;
   }
 
   @override
