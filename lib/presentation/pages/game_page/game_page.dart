@@ -1,6 +1,7 @@
 import 'package:provider/provider.dart';
 import 'package:second_touch/application/game_view_model.dart';
 import 'package:second_touch/game/my_game.dart';
+import 'package:second_touch/presentation/pages/game_page/widgets/direction_control.dart';
 
 import 'widgets/game_control_bar.dart';
 import 'widgets/pattern_menu_item.dart';
@@ -136,17 +137,28 @@ class _GamePageState extends State<GamePage> {
                     onZoomOut: () => widget.game.zoomOut(),
                   ),
                 ),
+                // Positioned(
+                //   top: 20,
+                //   left: 20,
+                //   child: GestureDetector(
+                //     onTapDown: (_) =>
+                //         widget.game.startMoving(Vector2(0, -1)),
+                //     onTapUp: (_) =>
+                //         widget.game.stopMoving(),
+                //     onTapCancel: () =>
+                //         widget.game.stopMoving(),
+                //     child: const Icon(Icons.arrow_upward, size: 40),
+                //   ),
+                // ),
                 Positioned(
-                  top: 20,
-                  left: 20,
-                  child: GestureDetector(
-                    onTapDown: (_) =>
-                        widget.game.startMoving(Vector2(0, -1)),
-                    onTapUp: (_) =>
-                        widget.game.stopMoving(),
-                    onTapCancel: () =>
-                        widget.game.stopMoving(),
-                    child: const Icon(Icons.arrow_upward, size: 40),
+                  bottom: MediaQuery.of(context).size.height * 0.3,
+                  right: 20,
+                  child: DirectionControl(
+                    onUp: () => widget.game.startMoving(Vector2(0, -1)),
+                    onDown: () => widget.game.startMoving(Vector2(0, 1)),
+                    onLeft: () => widget.game.startMoving(Vector2(-1, 0)),
+                    onRight: () => widget.game.startMoving(Vector2(1, 0)),
+                    onStop: () => widget.game.stopMoving(),
                   ),
                 ),
                 

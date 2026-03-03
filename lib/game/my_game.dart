@@ -35,8 +35,11 @@ class MyGame extends FlameGame {
     gameWorld.add(grid);
 
     gameCamera = CameraComponent(world: gameWorld)
-      ..viewfinder.position = Vector2.zero()
-      ..viewfinder.anchor = Anchor.topLeft;
+      ..viewfinder.position = Vector2(
+        grid.size.x / 2,
+        grid.size.y / 2,
+      )
+      ..viewfinder.anchor = Anchor.center;
 
     addAll([gameWorld, gameCamera]);
   }
